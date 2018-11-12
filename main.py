@@ -4,5 +4,6 @@ from data_process import *
 
 
 if __name__ == '__main__':
-    create_info_raw()
+    create_info_df()
     create_fmri_df()
+    create_vbm_df()

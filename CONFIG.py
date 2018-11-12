@@ -6,17 +6,24 @@ base_path = os.path.join(os.path.expanduser('~'), 'data', 'SCZ_973')
 ts_file_name = 'bn_cb_mean.pkl'
 rsfMRI_path = os.path.join(base_path, 'rsfMRI', 'ts')
 
-# subject info table path
 subj_base_path = os.path.join(base_path, 'subj_info')
 SZ_info_path = os.path.join(subj_base_path, 'SZ_all.csv')
 NC_info_path = os.path.join(subj_base_path, 'NC_all.csv')
 HR_info_path = os.path.join(subj_base_path, 'HR_all.csv')
 
+vbm_base_path = os.path.join(base_path, 'vbm_analysis', 'BN')
+vbm_features = ['m0wrp1_GM', 'm0wrp2_WM', 'm0wrp3_CSF', 'wmr']
+
+
 # subject info object
-SZ_INFO_RAW = None
-NC_INFO_RAW = None
+SZ_INFO = None
+NC_INFO = None
 
 # subject rsfMRI object
 SZ_fMRI = None
 NC_fMRI = None
+
+# subject VBM object
+SZ_VBM = None
+NC_VBM = None
 
