@@ -54,10 +54,10 @@ def _load_subject_vbm():
         feature_names = [vbm_feature + '_' + str(i) for i in range(nc_feature_array.shape[1])]
 
         df = pd.DataFrame(data=nc_feature_array, index=df_nc.index, columns=feature_names)
-        df_nc = pd.merge(df_nc, df, left_index=True, right_index=True)
+        df_nc = pd.merge(df_nc, df, how='inner', left_index=True, right_index=True)
 
         df = pd.DataFrame(data=sz_feature_array, index=df_sz.index, columns=feature_names)
-        df_sz = pd.merge(df_sz, df, left_index=True, right_index=True)
+        df_sz = pd.merge(df_sz, df, how='inner', left_index=True, right_index=True)
 
     dump_obj_pkl(obj=df_nc, file_name='NC_VBM')
     dump_obj_pkl(obj=df_sz, file_name='SZ_VBM')

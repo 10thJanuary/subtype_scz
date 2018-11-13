@@ -22,9 +22,9 @@ def create_smri_df():
 
 
 def _load_subject_smri():
-    nc_subjs, sz_subjs = _get_complete_smri_subjects()
-    df_nc = pd.DataFrame(index=nc_subjs)
-    df_sz = pd.DataFrame(index=sz_subjs)
+    # nc_subjs, sz_subjs = _get_complete_smri_subjects()
+    # df_nc = pd.DataFrame(index=nc_subjs)
+    # df_sz = pd.DataFrame(index=sz_subjs)
     pass
 
 

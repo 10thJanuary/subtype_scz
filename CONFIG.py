@@ -12,7 +12,7 @@ NC_info_path = os.path.join(subj_base_path, 'NC_all.csv')
 HR_info_path = os.path.join(subj_base_path, 'HR_all.csv')
 
 vbm_base_path = os.path.join(base_path, 'vbm_analysis', 'BN')
-vbm_features = ['m0wrp1_GM', 'm0wrp2_WM', 'm0wrp3_CSF', 'wmr']
+vbm_features = ['m0wrp1_GM', 'm0wrp2_WM', 'm0wrp3_CSF']
 
 fs_stats_base_path = os.path.join(base_path, 'Surface', 'surface_stats')
 fs_stats_files = [
