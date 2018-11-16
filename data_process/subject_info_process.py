@@ -8,16 +8,23 @@ from general_io import dump_obj_pkl, load_obj_pkl
 from scz_center_973 import get_center_info
 
 
-def create_info_df():
+def create_info_df(from_cached=True):
     cached_path = os.path.join(os.path.abspath('.'), 'cached_objects')
     if not os.path.exists(cached_path):
         os.mkdir(cached_path)
 
-    cached_objects = ['SZ_INFO.pkl', 'NC_INFO.pkl']
-    for obj in cached_objects:
-        if not os.path.exists(os.path.join(cached_path, obj)):
-            _create_subj_info()
-            break
+    create_new_flag = False
+    if from_cached:
+        cached_objects = ['SZ_INFO.pkl', 'NC_INFO.pkl']
+        for obj in cached_objects:
+            if not os.path.exists(os.path.join(cached_path, obj)):
+                create_new_flag = True
+                break
+    else:
+        create_new_flag = True
+
+    if create_new_flag:
+        _create_subj_info()
 
     CONFIG.SZ_INFO = load_obj_pkl(file_name='SZ_INFO')
     CONFIG.NC_INFO = load_obj_pkl(file_name='NC_INFO')
@@ -25,7 +32,7 @@ def create_info_df():
 
 def _create_subj_info():
     # read SZ NC subj info csv
-    encoding = 'ISO-8859-15'
+    encoding = 'gb2312'
     index_name = 'subject'
     df_nc = pd.read_csv(CONFIG.NC_info_path, encoding=encoding).set_index(index_name)
     df_sz = pd.read_csv(CONFIG.SZ_info_path, encoding=encoding).set_index(index_name)
