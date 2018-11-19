@@ -9,9 +9,10 @@ subj_base_path = os.path.join(base_path, 'subj_info')
 SZ_info_path = os.path.join(subj_base_path, 'SZ_all.csv')
 NC_info_path = os.path.join(subj_base_path, 'NC_all.csv')
 
-# ts name and path
+# ts_name, ts_path, ts_mi_path
 ts_file_name = 'bn_cb_mean.pkl'
 rsfMRI_path = os.path.join(base_path, 'rsfMRI', 'ts')
+ts_mi_path = os.path.join(base_path, 'rsfMRI', 'ts_mi_analysis')
 
 # VBM features and path
 vbm_base_path = os.path.join(base_path, 'vbm_analysis', 'BN')

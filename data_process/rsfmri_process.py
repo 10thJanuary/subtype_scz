@@ -75,6 +75,9 @@ def _load_subject_ts():
     # correlation matrix roi degree
     df_nc, df_sz = _compute_correlation_degree(df_nc=df_nc, df_sz=df_sz)
 
+    # mutual information matrix
+    df_nc, df_sz = _load_subj_mi(df_nc=df_nc, df_sz=df_sz)
+
     dump_obj_pkl(obj=df_nc, file_name='NC_fMRI')
     dump_obj_pkl(obj=df_sz, file_name='SZ_fMRI')
 
@@ -87,14 +90,14 @@ def _compute_correlation_matrix(df_nc, df_sz):
     nc_correlation_array = nc_measure.fit_transform(df_nc['ts_array'].values)
     for i in range(nc_correlation_array.shape[0]):
         np.fill_diagonal(nc_correlation_array[i], 0)
-    df_nc = df_nc.assign(corr_matrix=nc_correlation_array.tolist())
+    df_nc = df_nc.assign(corr_matrix=[nc_correlation_array[i] for i in range(nc_correlation_array.shape[0])])
 
     # SZ correlation
     sz_measure = ConnectivityMeasure(kind=corr_kind)
     sz_correlation_array = sz_measure.fit_transform(df_sz['ts_array'].values)
     for i in range(sz_correlation_array.shape[0]):
         np.fill_diagonal(sz_correlation_array[i], 0)
-    df_sz = df_sz.assign(corr_matrix=sz_correlation_array.tolist())
+    df_sz = df_sz.assign(corr_matrix=[sz_correlation_array[i] for i in range(sz_correlation_array.shape[0])])
 
     return df_nc, df_sz
 
@@ -117,7 +120,7 @@ def _compute_correlation_degree(df_nc, df_sz):
             else:
                 nc_degree_array = np.vstack((nc_degree_array, roi_degree))
 
-        df_nc[('corr_degree_' + str(value))] = nc_degree_array.tolist()
+        df_nc[('corr_degree_' + str(value))] = [nc_degree_array[i, :] for i in range(nc_degree_array.shape[0])]
 
     # SZ ROI degree
     sz_correlation_array = df_sz['corr_matrix'].values
@@ -134,6 +137,38 @@ def _compute_correlation_degree(df_nc, df_sz):
             else:
                 sz_degree_array = np.vstack((sz_degree_array, roi_degree))
 
-        df_sz[('corr_degree_' + str(value))] = sz_degree_array.tolist()
+        df_sz[('corr_degree_' + str(value))] = [sz_degree_array[i, :] for i in range(sz_degree_array.shape[0])]
+
+    return df_nc, df_sz
+
+
+def _get_matrix_lower_triangle(matrix, k=-1):
+    n, m = matrix.shape
+    pair_pos = np.tril_indices(n=n, k=k, m=m)
+
+    return matrix[pair_pos]
+
+
+def _get_matrix_upper_triangle(matrix, k=1):
+    n, m = matrix.shape
+    pair_pos = np.triu_indices(n=n, k=k, m=m)
+
+    return matrix[pair_pos]
+
+
+def _load_subj_mi(df_nc, df_sz):
+    nc_mi_array = [load_obj_pkl(file_name=subj + '_mi_' + CONFIG.ts_file_name,
+                                dir_path=os.path.join(CONFIG.ts_mi_path, subj)) for subj in df_nc.index]
+
+    df_nc = df_nc.assign(mi_matrix=nc_mi_array)
+    df_nc['mi_lower_triangle'] = df_nc['mi_matrix'].map(_get_matrix_lower_triangle)
+    df_nc['mi_upper_triangle'] = df_nc['mi_matrix'].map(_get_matrix_upper_triangle)
+
+    sz_mi_array = [load_obj_pkl(file_name=subj + '_mi_' + CONFIG.ts_file_name,
+                                dir_path=os.path.join(CONFIG.ts_mi_path, subj)) for subj in df_sz.index]
+
+    df_sz = df_sz.assign(mi_matrix=sz_mi_array)
+    df_sz['mi_lower_triangle'] = df_sz['mi_matrix'].map(_get_matrix_lower_triangle)
+    df_sz['mi_upper_triangle'] = df_sz['mi_matrix'].map(_get_matrix_upper_triangle)
 
     return df_nc, df_sz
