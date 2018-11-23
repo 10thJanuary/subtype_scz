@@ -8,8 +8,7 @@ from general_io import dump_obj_pkl, load_obj_pkl
 from scz_center_973 import get_center_info
 
 
-def create_info_df(from_cached=True):
-    cached_path = os.path.join(os.path.abspath('.'), 'cached_objects')
+def create_info_df(cached_path=os.path.join(os.path.abspath('.'), 'cached_objects'), from_cached=True):
     if not os.path.exists(cached_path):
         os.mkdir(cached_path)
 
@@ -26,8 +25,8 @@ def create_info_df(from_cached=True):
     if create_new_flag:
         _create_subj_info()
 
-    CONFIG.SZ_INFO = load_obj_pkl(file_name='SZ_INFO')
-    CONFIG.NC_INFO = load_obj_pkl(file_name='NC_INFO')
+    CONFIG.SZ_INFO = load_obj_pkl(file_name='SZ_INFO', dir_path=cached_path)
+    CONFIG.NC_INFO = load_obj_pkl(file_name='NC_INFO', dir_path=cached_path)
 
 
 def _create_subj_info():

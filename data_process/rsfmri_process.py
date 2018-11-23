@@ -9,8 +9,7 @@ from nilearn.connectome import ConnectivityMeasure
 from general_io import dump_obj_pkl, load_obj_pkl
 
 
-def create_fmri_df(from_cached=True):
-    cached_path = os.path.join(os.path.abspath('.'), 'cached_objects')
+def create_fmri_df(cached_path=os.path.join(os.path.abspath('.'), 'cached_objects'), from_cached=True):
     if not os.path.exists(cached_path):
         os.mkdir(cached_path)
 
@@ -27,8 +26,8 @@ def create_fmri_df(from_cached=True):
     if create_new_flag:
         _load_subject_ts()
 
-    CONFIG.SZ_fMRI = load_obj_pkl(file_name='SZ_fMRI')
-    CONFIG.NC_fMRI = load_obj_pkl(file_name='NC_fMRI')
+    CONFIG.SZ_fMRI = load_obj_pkl(file_name='SZ_fMRI', dir_path=cached_path)
+    CONFIG.NC_fMRI = load_obj_pkl(file_name='NC_fMRI', dir_path=cached_path)
 
 
 def _complete_ts(ts_array):
