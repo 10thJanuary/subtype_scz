@@ -1,5 +1,6 @@
 # coding=utf-8
 
+import argparse
 import os
 import pandas as pd
 import numpy as np
@@ -22,6 +23,11 @@ NMF_parameters = {
     'solver': ['cd', 'mu'],
     'beta_loss': ['frobenius', 'kullback-leibler', 'itakura-saito'],
 }
+
+demography = [
+    'age_research',
+    'education',
+]
 
 PANSS_P = [
     'delusion',
@@ -102,67 +108,51 @@ def get_subgroup(df_data, nmf_h, group_num):
 def group_stats(df_data, subgroup):
     res = {}
 
-    # sex
+    # sex distribution
     res_sex = {}
     for k, v in subgroup.items():
         df_group = df_data.loc[v]
         df_sex_1 = df_group.loc[df_group['sex'] == '1']
         df_sex_2 = df_group.loc[df_group['sex'] == '2']
         res_sex.update({str(k): '%s / %s' % (df_sex_1.shape[0], df_sex_2.shape[0])})
-
     res.update({'sex': res_sex})
 
-    # age
-    res_age, group_values = {}, []
-    for k, v in subgroup.items():
-        df_group = df_data.loc[v]
-        age_values = df_group['age_research'].values.astype('float32').tolist()
-        group_values.append(age_values)
+    # stats demography PANSS
+    res_stats = {}
+    stats_columns = demography + PANSS_TOTAL + PANSS_P + PANSS_N + PANSS_G
+    for stats_item in stats_columns:
+        res_stats_item, group_values = {}, []
 
-    statistic, p_value = stats.f_oneway(*group_values)
-    res_age.update({'1-way ANOVA': 's=%s, p=%s' % (statistic, p_value)})
-
-    statistic, p_value = stats.kruskal(*group_values)
-    res_age.update({'Kruskal-Wallis H-test': 'S=%s, p=%s' % (statistic, p_value)})
-
-    res.update({'age': res_age})
-
-    # education
-    res_education, group_values = {}, []
-    for k, v in subgroup.items():
-        df_group = df_data.loc[v]
-        education_values = df_group['education'].values.astype('float32').tolist()
-        group_values.append(education_values)
-
-    statistic, p_value = stats.f_oneway(*group_values)
-    res_education.update({'1-way ANOVA': 's=%s, p=%s' % (statistic, p_value)})
-
-    statistic, p_value = stats.kruskal(*group_values)
-    res_education.update({'Kruskal-Wallis H-test': 's=%s, p=%s' % (statistic, p_value)})
-
-    res.update({'education': res_education})
-
-    # PANSS
-    res_panss = {}
-    panss_cols = PANSS_TOTAL + PANSS_P + PANSS_N + PANSS_G
-    for panss_item in panss_cols:
-        res_panss_item, group_values = {}, []
         for k, v in subgroup.items():
             df_group = df_data.loc[v]
-            panss_values = df_group[panss_item].values.astype('float32').tolist()
-            group_values.append(panss_values)
+            values = df_group[stats_item].values.astype('float32').tolist()
+            group_values.append(values)
 
-        statistic, p_value = stats.f_oneway(*group_values)
-        res_panss_item.update({'1-way ANOVA': 's=%s, p=%s' % (statistic, p_value)})
+        if len(group_values) > 2:
+            statistic, p_value = stats.f_oneway(*group_values)
+            res_stats_item.update({'1-way ANOVA': 's=%s, p=%s' % (statistic, p_value)})
 
-        statistic, p_value = stats.kruskal(*group_values)
-        res_panss_item.update({'Kruskal-Wallis H-test': 's=%s, p=%s' % (statistic, p_value)})
+            statistic, p_value = stats.kruskal(*group_values)
+            res_stats_item.update({'Kruskal-Wallis H-test': 's=%s, p=%s' % (statistic, p_value)})
+        elif len(group_values) == 2:
+            statistic, p_value = stats.ttest_ind(group_values[0], group_values[1])
+            res_stats_item.update({'T-test': 's=%s, p=%s' % (statistic, p_value)})
 
-        res_panss.update({panss_item: res_panss_item})
+        res_stats.update({stats_item: res_stats_item})
 
-    res.update({'panss': res_panss})
+    res.update({'stats': res_stats})
 
     return res
+
+
+def create_parser():
+    parser = argparse.ArgumentParser(
+        prog='nmf_cluster',
+        description='auto script: nmf cluster stats.',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--center_num', type=int, help='center num to train for NMF')
+
+    return parser
 
 
 if __name__ == '__main__':
@@ -171,6 +161,10 @@ if __name__ == '__main__':
 
     import CONFIG
     from data_process import create_info_df, create_fmri_df
+
+    args = create_parser().parse_args()
+    if args.center_num is not None:
+        center_train_num = int(args.center_num)
 
     create_info_df(cached_path=os.path.join(os.path.abspath('..'), 'cached_objects'))
     create_fmri_df(cached_path=os.path.join(os.path.abspath('..'), 'cached_objects'))
@@ -221,7 +215,7 @@ if __name__ == '__main__':
                     cached_content.clear()
 
                     obj_write = ['%s: %s\n' % (k, v) for k, v in parameters.items()]
-                    obj_write = ['\n[NMF parameters]\n'] + obj_write
+                    obj_write = ['\n' + '*' * 80] + ['\n[NMF parameters]\n'] + obj_write
                     print(obj_write)
                     cached_content.extend(obj_write)
 
@@ -232,31 +226,21 @@ if __name__ == '__main__':
                     res_subgroup = get_subgroup(df_data=df_train, nmf_h=H, group_num=n_components)
 
                     obj_write = ['%s: %s\n' % (k, len(v)) for k, v in res_subgroup.items()]
-                    obj_write = ['\n[subgroup stats]\n'] + obj_write
+                    obj_write = ['\n[stats subgroup]\n'] + obj_write
                     print(obj_write)
                     cached_content.extend(obj_write)
 
-                    res_stats = group_stats(df_data=df_train, subgroup=res_subgroup)
+                    stats_result = group_stats(df_data=df_train, subgroup=res_subgroup)
 
-                    obj_write = ['%s: %s\n' % (k, v) for k, v in res_stats['sex'].items()]
-                    obj_write = ['\n[sex stats]\n'] + obj_write
+                    obj_write = ['%s: %s\n' % (k, v) for k, v in stats_result['sex'].items()]
+                    obj_write = ['\n[stats sex]\n'] + obj_write
                     print(obj_write)
                     cached_content.extend(obj_write)
 
-                    obj_write = ['%s: %s\n' % (k, v) for k, v in res_stats['age'].items()]
-                    obj_write = ['\n[age stats]\n'] + obj_write
-                    print(obj_write)
-                    cached_content.extend(obj_write)
-
-                    obj_write = ['%s: %s\n' % (k, v) for k, v in res_stats['education'].items()]
-                    obj_write = ['\n[education stats]\n'] + obj_write
-                    print(obj_write)
-                    cached_content.extend(obj_write)
-
-                    panss_items = PANSS_TOTAL + PANSS_P + PANSS_N + PANSS_G
-                    for item in panss_items:
-                        obj_write = ['%s: %s\n' % (k, v) for k, v in res_stats['panss'][item].items()]
-                        obj_write = ['\n[panss stats %s]\n' % item] + obj_write
+                    stats_items = demography + PANSS_TOTAL + PANSS_P + PANSS_N + PANSS_G
+                    for item in stats_items:
+                        obj_write = ['%s: %s\n' % (k, v) for k, v in stats_result['stats'][item].items()]
+                        obj_write = ['\n[stats %s]\n' % item] + obj_write
                         print(obj_write)
                         cached_content.extend(obj_write)
 
