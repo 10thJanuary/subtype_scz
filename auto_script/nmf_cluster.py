@@ -10,13 +10,9 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.decomposition import NMF
 
 
-center_train_num = 5
 center_no_strings = ['01', '02', '05_01', '05_02', '07', '09', '10']
 
 cluster_nums = [2, 3, 4, 5, 6, 7, 8, 9, 10]
-
-base_save_dir = os.path.join(os.path.abspath('..'), 'auto_report')
-save_dir = os.path.join(base_save_dir, 'MI', 'center_train_num_' + str(center_train_num))
 
 NMF_parameters = {
     'n_components': cluster_nums,
@@ -76,7 +72,7 @@ PANSS_TOTAL = [
 ]
 
 
-def dump_multiple_lines(obj, name, dir_path=save_dir):
+def dump_multiple_lines(obj, name, dir_path):
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
 
@@ -165,6 +161,11 @@ if __name__ == '__main__':
     args = create_parser().parse_args()
     if args.center_num is not None:
         center_train_num = int(args.center_num)
+    else:
+        center_train_num = 5
+
+    base_save_dir = os.path.join(os.path.abspath('..'), 'auto_report')
+    save_dir = os.path.join(base_save_dir, 'MI', 'center_train_num_' + str(center_train_num))
 
     create_info_df(cached_path=os.path.join(os.path.abspath('..'), 'cached_objects'))
     create_fmri_df(cached_path=os.path.join(os.path.abspath('..'), 'cached_objects'))
@@ -191,7 +192,7 @@ if __name__ == '__main__':
         print(obj_write)
         cached_content.append(obj_write)
 
-        dump_multiple_lines(obj=cached_content, name=file_name)
+        dump_multiple_lines(obj=cached_content, name=file_name, dir_path=save_dir)
 
         for n_components in NMF_parameters['n_components']:
             for solver in NMF_parameters['solver']:
@@ -244,4 +245,4 @@ if __name__ == '__main__':
                         print(obj_write)
                         cached_content.extend(obj_write)
 
-                    dump_multiple_lines(obj=cached_content, name=file_name)
+                    dump_multiple_lines(obj=cached_content, name=file_name, dir_path=save_dir)
